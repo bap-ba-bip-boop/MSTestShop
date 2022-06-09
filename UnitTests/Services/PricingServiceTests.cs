@@ -44,6 +44,96 @@ public class PricingServiceTests
     }
 
     [TestMethod, AutoDomainData]
+    public void When_Percentage_Discount_Is_Over_100_Should_Return_Base_Price(
+        PricingService _sut,
+        int basePrice,
+        Random _rng
+    )
+    {
+        var percentageDiscount = 101;
+        var listofProducts = new List<ProductServiceModel>
+        {
+            new ProductServiceModel
+            {
+                Name = "Laptop",
+                BasePrice = basePrice
+            }
+        };
+
+        var customerContext = new CurrentCustomerContext
+        {
+            Agreements = new List<Agreement>
+            {
+                new Agreement
+                {
+                    ValidFrom = DateTime.Now.AddHours(-1.0),
+                    ValidTo = DateTime.Now.AddHours(1.0),
+                    AgreementRows = new List<AgreementRow>
+                    {
+                        new AgreementRow
+                        {
+                            ManufacturerMatch = "Laptop",
+                            PercentageDiscount = percentageDiscount
+                        }
+                    }
+                }
+            }
+        };
+
+        var expectedResult = basePrice;
+
+        var result = _sut.CalculatePrices(listofProducts, customerContext);
+
+        var resultPrice = result.Select(prod => prod.Price).Sum();
+
+        Assert.AreEqual(expectedResult, resultPrice);
+    }
+    [TestMethod, AutoDomainData]
+    public void When_Percentage_Discount_Is_Negative_Should_Return_Base_Price(
+        PricingService _sut,
+        int basePrice,
+        Random _rng
+    )
+    {
+        var percentageDiscount = -1;
+        var listofProducts = new List<ProductServiceModel>
+        {
+            new ProductServiceModel
+            {
+                Name = "Laptop",
+                BasePrice = basePrice
+            }
+        };
+
+        var customerContext = new CurrentCustomerContext
+        {
+            Agreements = new List<Agreement>
+            {
+                new Agreement
+                {
+                    ValidFrom = DateTime.Now.AddHours(-1.0),
+                    ValidTo = DateTime.Now.AddHours(1.0),
+                    AgreementRows = new List<AgreementRow>
+                    {
+                        new AgreementRow
+                        {
+                            ManufacturerMatch = "Laptop",
+                            PercentageDiscount = percentageDiscount
+                        }
+                    }
+                }
+            }
+        };
+
+        var expectedResult = basePrice;
+
+        var result = _sut.CalculatePrices(listofProducts, customerContext);
+
+        var resultPrice = result.Select(prod => prod.Price).Sum();
+
+        Assert.AreEqual(expectedResult, resultPrice);
+    }
+    [TestMethod, AutoDomainData]
     public void When_Call_CalculatePrices_Within_Valid_Time_Should_Reduce_Price(
         PricingService _sut,
         Random _rng
@@ -299,6 +389,8 @@ public class PricingServiceTests
                 },
                 new Agreement
                 {
+                    ValidFrom = DateTime.Now.AddHours(-1.0),
+                    ValidTo = DateTime.Now.AddHours(1.0),
                     AgreementRows = new List<AgreementRow>
                     {
                         new AgreementRow
