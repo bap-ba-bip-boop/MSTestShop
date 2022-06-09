@@ -23,8 +23,4 @@
     <ProjectReference Include="..\MSTestShop\MSTestShop.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Controllers\" />
-  </ItemGroup>
-
 </Project>
