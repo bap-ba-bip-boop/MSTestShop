@@ -16,15 +16,18 @@ public class PricingService : IPricingService
             {
                 foreach (var agreement in customerContext.Agreements!)
                 {
-                    foreach (var agreementRow in agreement.AgreementRows)
+                    var dayCheck = agreement.ValidFrom < DateTime.Now &&  DateTime.Now < agreement.ValidTo;
+                    if(dayCheck)
                     {
-                        if (AgreementMatches(agreementRow, product))
+                        foreach (var agreementRow in agreement.AgreementRows)
                         {
-                            var price = (1.0m - (agreementRow.PercentageDiscount / 100.0m)) * product.BasePrice;
-                            if (price < lowest)
-                                lowest = Convert.ToInt32(Math.Round(price, 0));
+                            if (AgreementMatches(agreementRow, product) && 0 <= agreementRow.PercentageDiscount && agreementRow.PercentageDiscount <= 100)
+                            {
+                                var price = (1.0m - (agreementRow.PercentageDiscount / 100.0m)) * product.BasePrice;
+                                if (price < lowest)
+                                    lowest = Convert.ToInt32(Math.Round(price, 0));
+                            }
                         }
-
                     }
                 }
             }

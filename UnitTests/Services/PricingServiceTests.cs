@@ -12,16 +12,99 @@ namespace UnitTests.MvcSuperShop.Services;
 [TestClass]
 public class PricingServiceTests
 {
-    //if percentageDiscount is over 100 should return Base Price?
-    //if percentageDiscount is negative should return Base Price?
-    //if Agreement is out of date should not apply discount
-    //-- if it before the agreement is valid it should not count
-    //-- if it is after the agreement is valid it should not count
-    //if the agreement is during the valid time it should count
+    [TestMethod, AutoDomainData]
+    public void When_Percentage_Discount_Is_Over_100_Should_Return_Base_Price(
+        PricingService _sut,
+        int basePrice,
+        Random _rng
+    )
+    {
+        var percentageDiscount = 101;
+        var listofProducts = new List<ProductServiceModel>
+        {
+            new ProductServiceModel
+            {
+                Name = "Laptop",
+                BasePrice = basePrice
+            }
+        };
+
+        var customerContext = new CurrentCustomerContext
+        {
+            Agreements = new List<Agreement>
+            {
+                new Agreement
+                {
+                    ValidFrom = DateTime.Now.AddHours(-1.0),
+                    ValidTo = DateTime.Now.AddHours(1.0),
+                    AgreementRows = new List<AgreementRow>
+                    {
+                        new AgreementRow
+                        {
+                            ManufacturerMatch = "Laptop",
+                            PercentageDiscount = percentageDiscount
+                        }
+                    }
+                }
+            }
+        };
+
+        var expectedResult = basePrice;
+
+        var result = _sut.CalculatePrices(listofProducts, customerContext);
+
+        var resultPrice = result.Select(prod => prod.Price).Sum();
+
+        Assert.AreEqual(expectedResult, resultPrice);
+    }
+    [TestMethod, AutoDomainData]
+    public void When_Percentage_Discount_Is_Negative_Should_Return_Base_Price(
+        PricingService _sut,
+        int basePrice,
+        Random _rng
+    )
+    {
+        var percentageDiscount = -1;
+        var listofProducts = new List<ProductServiceModel>
+        {
+            new ProductServiceModel
+            {
+                Name = "Laptop",
+                BasePrice = basePrice
+            }
+        };
+
+        var customerContext = new CurrentCustomerContext
+        {
+            Agreements = new List<Agreement>
+            {
+                new Agreement
+                {
+                    ValidFrom = DateTime.Now.AddHours(-1.0),
+                    ValidTo = DateTime.Now.AddHours(1.0),
+                    AgreementRows = new List<AgreementRow>
+                    {
+                        new AgreementRow
+                        {
+                            ManufacturerMatch = "Laptop",
+                            PercentageDiscount = percentageDiscount
+                        }
+                    }
+                }
+            }
+        };
+
+        var expectedResult = basePrice;
+
+        var result = _sut.CalculatePrices(listofProducts, customerContext);
+
+        var resultPrice = result.Select(prod => prod.Price).Sum();
+
+        Assert.AreEqual(expectedResult, resultPrice);
+    }
     [TestMethod, AutoDomainData]
     public void When_Call_CalculatePrices_Within_Valid_Time_Should_Reduce_Price(
         PricingService _sut,
-        DateTime endDate,
         int basePrice,
         Random _rng
     )
@@ -42,8 +125,8 @@ public class PricingServiceTests
             {
                 new Agreement
                 {
-                    ValidFrom = endDate.AddHours(-1.0),
-                    ValidTo = endDate.AddHours(1.0),
+                    ValidFrom = DateTime.Now.AddHours(-1.0),
+                    ValidTo = DateTime.Now.AddHours(1.0),
                     AgreementRows = new List<AgreementRow>
                     {
                         new AgreementRow
@@ -88,8 +171,8 @@ public class PricingServiceTests
             {
                 new Agreement
                 {
-                    ValidFrom = endDate.AddHours(1.0),
-                    ValidTo = endDate.AddHours(2.0),
+                    ValidFrom = DateTime.Now.AddHours(1.0),
+                    ValidTo = DateTime.Now.AddHours(2.0),
                     AgreementRows = new List<AgreementRow>
                     {
                         new AgreementRow
@@ -134,8 +217,8 @@ public class PricingServiceTests
             {
                 new Agreement
                 {
-                    ValidFrom = endDate.AddHours(-2.0),
-                    ValidTo = endDate.AddHours(-1.0),
+                    ValidFrom = DateTime.Now.AddHours(-2.0),
+                    ValidTo = DateTime.Now.AddHours(-1.0),
                     AgreementRows = new List<AgreementRow>
                     {
                         new AgreementRow
@@ -203,6 +286,8 @@ public class PricingServiceTests
             {
                 new Agreement
                 {
+                    ValidFrom = DateTime.Now.AddHours(-1.0),
+                    ValidTo = DateTime.Now.AddHours(1.0),
                     AgreementRows = new List<AgreementRow>
                     {
                         new AgreementRow
@@ -214,6 +299,8 @@ public class PricingServiceTests
                 },
                 new Agreement
                 {
+                    ValidFrom = DateTime.Now.AddHours(-1.0),
+                    ValidTo = DateTime.Now.AddHours(1.0),
                     AgreementRows = new List<AgreementRow>
                     {
                         new AgreementRow
@@ -225,13 +312,6 @@ public class PricingServiceTests
                 },
             }
         };
-
-        //if it has a choice between 2 different discount it will pick the bigger one
-
-        //200 160
-        // 50  45
-        // 10   9
-        //260 214
 
         var expectedSum = 160;
 
@@ -271,6 +351,8 @@ public class PricingServiceTests
             {
                 new Agreement
                 {
+                    ValidFrom = DateTime.Now.AddHours(-1.0),
+                    ValidTo = DateTime.Now.AddHours(1.0),
                     AgreementRows = new List<AgreementRow>
                     {
                         new AgreementRow
@@ -282,6 +364,8 @@ public class PricingServiceTests
                 },
                 new Agreement
                 {
+                    ValidFrom = DateTime.Now.AddHours(-1.0),
+                    ValidTo = DateTime.Now.AddHours(1.0),
                     AgreementRows = new List<AgreementRow>
                     {
                         new AgreementRow
@@ -298,6 +382,8 @@ public class PricingServiceTests
                 },
                 new Agreement
                 {
+                    ValidFrom = DateTime.Now.AddHours(-1.0),
+                    ValidTo = DateTime.Now.AddHours(1.0),
                     AgreementRows = new List<AgreementRow>
                     {
                         new AgreementRow
@@ -314,9 +400,6 @@ public class PricingServiceTests
                 },
             }
         };
-
-        //if it has a choice between 2 different discount it will pick the bigger one
-
         //200 160
         // 50  45
         // 10   9
@@ -329,98 +412,5 @@ public class PricingServiceTests
         var recievedSum = result.Select(product => product.Price).Sum();
 
         Assert.AreEqual(expectedSum, recievedSum);
-    }
-
-    private static AgreementRow CreateAgreementRow(Random _rng, IEnumerable<ProductServiceModel> products)
-    {
-        var newAgreementRow = new AgreementRow();
-        var AgreementType = _rng.Next(1, 3);
-
-        var agreementToApply = products.ElementAt(_rng.Next(products.Count()));
-
-        if (AgreementType == 1)
-        {
-            newAgreementRow.ManufacturerMatch = agreementToApply.Name;
-        }
-        else if (AgreementType == 2)
-        {
-            newAgreementRow.ProductMatch = agreementToApply.Name;
-        }
-        else if (AgreementType == 3)
-        {
-            newAgreementRow.CategoryMatch = agreementToApply.Name;
-        }
-
-        var maxDouble = 50.0;
-        var minDouble = 10.0;
-
-        var percentageDiscount = (decimal)(_rng.NextDouble()*(maxDouble-minDouble) + minDouble);
-
-        newAgreementRow.PercentageDiscount = percentageDiscount;
-
-        return newAgreementRow;
-    }
-    private static Agreement CreateAgreement(Random _rng, IEnumerable<ProductServiceModel> products)
-    {
-        //Create Agreement
-        var Agreement = new Agreement();
-
-        var AgreementRowAmount = _rng.Next(1, 5);
-
-        //CreateAgreeMentRow
-        for (int i = 0; i < AgreementRowAmount; i++)
-        {
-            Agreement.AgreementRows.Add(CreateAgreementRow(_rng, products));
-        }
-
-        return Agreement;
-    }
-    private static IEnumerable<Agreement> getCustomerContextAgreements(int amount, Random _rng, IEnumerable<ProductServiceModel> products)
-    {
-        for (int i = 0; i < amount; i++)
-        {
-            yield return CreateAgreement(_rng, products);
-        }
-    }
-    private static int calculateExpectedPrice(IEnumerable<ProductServiceModel> products, CurrentCustomerContext customerContext)
-    {
-        //for each product
-        foreach (var prod in products)
-        {
-            var lowest = prod.BasePrice;
-            //we check each Agreement in Customer Context
-            foreach (var agreement in customerContext.Agreements!)
-            {
-                //we check each of the agreement types
-                foreach (var row in agreement.AgreementRows)
-                {
-                    //if there are any deals for the product for the specific type
-                    var check = false;
-                    if (!string.IsNullOrEmpty(row.ManufacturerMatch) && row.ManufacturerMatch.ToLower().Contains(prod.Name!.ToLower()))
-                    {
-                        check = true;
-                    }
-                    else if (!string.IsNullOrEmpty(row.ProductMatch) && row.ProductMatch.ToLower().Contains(prod.Name!.ToLower()))
-                    {
-                        check = true;
-                    }
-                    else if (!string.IsNullOrEmpty(row.CategoryMatch) && row.CategoryMatch.ToLower().Contains(prod.Name!.ToLower()))
-                    {
-                        check = true;
-                    }
-
-                    if (check)
-                    {
-                        var temp = (1m - row.PercentageDiscount / 100m) * prod.Price;
-
-                        if (temp < lowest)
-                            lowest = decimal.ToInt32(temp);
-                    }
-                }
-            }
-            prod.Price = lowest;
-        }
-
-        return products.Select(product => product.Price).Sum();
     }
 }
