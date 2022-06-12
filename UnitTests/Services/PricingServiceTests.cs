@@ -45,20 +45,11 @@ public class PricingServiceTests
 
     [TestMethod, AutoDomainData]
     public void When_Percentage_Discount_Is_Over_100_Should_Return_Base_Price(
-        PricingService _sut,
-        int basePrice,
-        Random _rng
+        PricingService _sut
     )
     {
         var percentageDiscount = 101;
-        var listofProducts = new List<ProductServiceModel>
-        {
-            new ProductServiceModel
-            {
-                Name = "Laptop",
-                BasePrice = basePrice
-            }
-        };
+        var product = listofProducts!.First();
 
         var customerContext = new CurrentCustomerContext
         {
@@ -72,7 +63,7 @@ public class PricingServiceTests
                     {
                         new AgreementRow
                         {
-                            ManufacturerMatch = "Laptop",
+                            ManufacturerMatch = product.ManufacturerName,
                             PercentageDiscount = percentageDiscount
                         }
                     }
@@ -80,30 +71,19 @@ public class PricingServiceTests
             }
         };
 
-        var expectedResult = basePrice;
-
-        var result = _sut.CalculatePrices(listofProducts, customerContext);
+        var result = _sut.CalculatePrices(listofProducts!, customerContext);
 
         var resultPrice = result.Select(prod => prod.Price).Sum();
 
-        Assert.AreEqual(expectedResult, resultPrice);
+        Assert.AreEqual(basePrice, resultPrice);
     }
     [TestMethod, AutoDomainData]
     public void When_Percentage_Discount_Is_Negative_Should_Return_Base_Price(
-        PricingService _sut,
-        int basePrice,
-        Random _rng
+        PricingService _sut
     )
     {
         var percentageDiscount = -1;
-        var listofProducts = new List<ProductServiceModel>
-        {
-            new ProductServiceModel
-            {
-                Name = "Laptop",
-                BasePrice = basePrice
-            }
-        };
+        var product = listofProducts!.First();
 
         var customerContext = new CurrentCustomerContext
         {
@@ -117,7 +97,7 @@ public class PricingServiceTests
                     {
                         new AgreementRow
                         {
-                            ManufacturerMatch = "Laptop",
+                            ManufacturerMatch = product.ManufacturerName,
                             PercentageDiscount = percentageDiscount
                         }
                     }
@@ -125,13 +105,11 @@ public class PricingServiceTests
             }
         };
 
-        var expectedResult = basePrice;
-
-        var result = _sut.CalculatePrices(listofProducts, customerContext);
+        var result = _sut.CalculatePrices(listofProducts!, customerContext);
 
         var resultPrice = result.Select(prod => prod.Price).Sum();
 
-        Assert.AreEqual(expectedResult, resultPrice);
+        Assert.AreEqual(basePrice, resultPrice);
     }
     [TestMethod, AutoDomainData]
     public void When_Call_CalculatePrices_Within_Valid_Time_Should_Reduce_Price(
@@ -219,13 +197,13 @@ public class PricingServiceTests
             {
                 new Agreement
                 {
-                    ValidFrom = DateTime.Now.AddHours(-2.0),
+                    ValidFrom = DateTime.Now.AddHours(-2.0),//validation spacing int
                     ValidTo = DateTime.Now.AddHours(-1.0),
                     AgreementRows = new List<AgreementRow>
                     {
                         new AgreementRow
                         {
-                            ProductMatch = product.Name,
+                            ProductMatch = product.Name, //List< (name, int discount)[] >
                             PercentageDiscount = percentageDiscount
                         }
                     }
@@ -337,20 +315,28 @@ public class PricingServiceTests
         PricingService _sut
     )
     {
+        var listofProducts = new List<ProductServiceModel>();
+        listofProducts!.Add(
+            new ProductServiceModel
+            {
+                Name = "Laptop",
+                BasePrice = 200
+            }
+        );
         listofProducts!.Add(
             new ProductServiceModel
             {
                 Name = "Video Game",
                 BasePrice = 50
             }
-            );
+        );
         listofProducts!.Add(
             new ProductServiceModel
             {
                 Name = "Milk",
                 BasePrice = 10
             }
-            );
+        );
 
         var customerContext = new CurrentCustomerContext
         {
@@ -395,12 +381,12 @@ public class PricingServiceTests
                     {
                         new AgreementRow
                         {
-                            ManufacturerMatch = "Laptop",
+                            ProductMatch = "Laptop",
                             PercentageDiscount = 5
                         },
                         new AgreementRow
                         {
-                            CategoryMatch = "Video Game",
+                            ProductMatch = "Video Game",
                             PercentageDiscount = 5
                         }
                     }

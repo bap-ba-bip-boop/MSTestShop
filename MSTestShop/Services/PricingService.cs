@@ -20,7 +20,7 @@ public class PricingService : IPricingService
                     {
                         foreach (var agreementRow in agreement.AgreementRows)
                         {
-                            if (AgreementMatches(agreementRow, product))
+                            if (AgreementMatches(agreementRow, product) && 0 < agreementRow.PercentageDiscount && agreementRow.PercentageDiscount <= 100)
                             {
                                 var price = (1.0m - (agreementRow.PercentageDiscount / 100.0m)) * product.BasePrice;
                                 if (price < lowest)

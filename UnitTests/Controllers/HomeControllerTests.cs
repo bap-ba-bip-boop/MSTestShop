@@ -17,6 +17,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 using AutoFixture.MSTest;
 using AutoFixture;
+using Microsoft.EntityFrameworkCore;
 
 namespace UnitTests.Controllers;
 
@@ -27,21 +28,22 @@ namespace UnitTests.Controllers;
 public class HomeControllerTests
 {
     private HomeController? _sut;
-    private Mock<ICategoryService>? _categoryServiceMock;
-    private Mock<IProductService>? _productServiceMock;
-    private Mock<IMapper>? _mapper;
-    [TestInitialize]
-    public void Initialize()
+
+    [TestInitialize, AutoDomainData]
+    public void Initialize(
+        [Frozen] Mock<ICategoryService> _categoryServiceMock,
+        [Frozen] Mock<IProductService> _productServiceMock,
+        [Frozen] Mock<IMapper> _mapper,
+        Fixture fixture)
     {
-        var fixture = new Fixture();
-        _categoryServiceMock = new Mock<ICategoryService>();
-        _productServiceMock = new Mock<IProductService>();
-        _mapper = new Mock<IMapper>();
         _sut = new HomeController(_categoryServiceMock.Object, _productServiceMock.Object, _mapper.Object, fixture.Create<ApplicationDbContext>());
     }
 
     [TestMethod, AutoDomainData]
     public void When_Call_Index_Should_Return_ViewModel(
+        [Frozen] Mock<ICategoryService> _categoryServiceMock,
+        [Frozen] Mock<IProductService> _productServiceMock,
+        [Frozen] Mock<IMapper> _mapper,
         IEnumerable<Category> categories,
         IEnumerable<ProductServiceModel> products,
         List<ProductBoxViewModel> mapperProductLsit,
@@ -70,6 +72,7 @@ public class HomeControllerTests
         var result = _sut!.Index() as ViewResult;
         var resultModel = result!.Model as HomeIndexViewModel;
 
-        Assert.AreEqual(resultModel, products);
+        Assert.AreEqual(resultModel!.NewProducts, mapperProductLsit);
+        Assert.AreEqual(resultModel!.TrendingCategories, mapperCategoryList);
     }
 }
