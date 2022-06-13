@@ -75,4 +75,7 @@ public class HomeControllerTests
         Assert.AreEqual(resultModel!.NewProducts, mapperProductLsit);
         Assert.AreEqual(resultModel!.TrendingCategories, mapperCategoryList);
     }
+
+    //make sure only the categories and products for a certain user are shown
+    //make sure it gets the right amount - Hard Coded :(
 }
