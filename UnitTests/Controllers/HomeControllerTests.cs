@@ -8,16 +8,15 @@ using MvcSuperShop.Services;
 using MvcSuperShop.ViewModels;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Security.Claims;
-using System.Text;
-using System.Threading.Tasks;
 using UnitTests.TestInfrastructure.Attributes;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
-using AutoFixture.MSTest;
 using AutoFixture;
+using Microsoft.Extensions.Options;
+using MSTestShop.Settings;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
 
 namespace UnitTests.Controllers;
 
@@ -27,42 +26,56 @@ namespace UnitTests.Controllers;
 [TestClass]
 public class HomeControllerTests
 {
+    private Mock<ICategoryService>? _categoryServiceMock;
+    private Mock<IProductService>? _productServiceMock;
+    private Mock<IMapper>? _mapper;
+    private ApplicationDbContext? _context;
+    private IOptions<HomeControllerSettings>? _options;
     private HomeController? _sut;
 
-    [TestInitialize, AutoDomainData]
-    public void Initialize(
-        [Frozen] Mock<ICategoryService> _categoryServiceMock,
-        [Frozen] Mock<IProductService> _productServiceMock,
-        [Frozen] Mock<IMapper> _mapper,
-        Fixture fixture)
-    {
-        _sut = new HomeController(_categoryServiceMock.Object, _productServiceMock.Object, _mapper.Object, fixture.Create<ApplicationDbContext>());
-    }
+    private string email;
+    private Guid userId;
 
-    [TestMethod, AutoDomainData]
-    public void When_Call_Index_Should_Return_ViewModel(
-        [Frozen] Mock<ICategoryService> _categoryServiceMock,
-        [Frozen] Mock<IProductService> _productServiceMock,
-        [Frozen] Mock<IMapper> _mapper,
-        IEnumerable<Category> categories,
-        IEnumerable<ProductServiceModel> products,
-        List<ProductBoxViewModel> mapperProductLsit,
-        List<CategoryViewModel> mapperCategoryList
-    )
+    [TestInitialize]
+    public void init()
     {
+        var fixture = new Fixture();
+
+        email = "temp@temp.se";
+        userId = fixture.Create<Guid>();
+
+        _categoryServiceMock = new Mock<ICategoryService>();
+        _productServiceMock = new Mock<IProductService>();
+        _mapper = new Mock<IMapper>();
+        _context = new ApplicationDbContext(
+            new DbContextOptionsBuilder<ApplicationDbContext>()
+                .UseInMemoryDatabase(databaseName: "AutoDomain Database")
+                .Options
+                        );
+        _options = Options.Create(new HomeControllerSettings());
+
+        _sut = new HomeController(_categoryServiceMock.Object, _productServiceMock.Object, _mapper.Object, _context, _options);
+
         var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
         {
-            new Claim(ClaimTypes.NameIdentifier, Guid.NewGuid().ToString()),
-            new Claim(ClaimTypes.Email, "gunnar@somecompany.com")
+            new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
+            new Claim(ClaimTypes.Email, email)
         }, "TestAuthentication"));
-
 
         _sut!.ControllerContext = new ControllerContext();
         _sut.ControllerContext.HttpContext = new DefaultHttpContext
         {
             User = user
         };
-
+    }
+    [TestMethod, AutoDomainData]
+    public void When_Call_Index_Should_Return_ViewModel(
+        IEnumerable<Category> castegories,
+        IEnumerable<ProductServiceModel> products,
+        List<ProductBoxViewModel> mapperProductLsit,
+        List<CategoryViewModel> mapperCategoryList
+    )
+    {
         _categoryServiceMock!.Setup( cService => cService.GetTrendingCategories(It.IsAny<int>())).Returns(categories);
         _productServiceMock!.Setup(pService => pService.GetNewProducts(It.IsAny<int>(), It.IsAny<CurrentCustomerContext>())).Returns(products);
 
@@ -72,10 +85,50 @@ public class HomeControllerTests
         var result = _sut!.Index() as ViewResult;
         var resultModel = result!.Model as HomeIndexViewModel;
 
+
         Assert.AreEqual(resultModel!.NewProducts, mapperProductLsit);
         Assert.AreEqual(resultModel!.TrendingCategories, mapperCategoryList);
     }
+    [TestMethod, AutoDomainData]
+    public void When_Call_Index_Should_Return_Correct_Amounts_of_items(
+        IEnumerable<Category> categories,
+        IEnumerable<ProductServiceModel> products,
+        Fixture fixture
+    )
+    {
+        var prodAmount = _options!.Value.ProductAmount;
+        var cateAmount = _options.Value.TrendigCategoriesAmount;
 
+        _categoryServiceMock!.Setup(cService => cService.GetTrendingCategories(It.IsAny<int>())).Returns(categories);
+        _productServiceMock!.Setup(pService => pService.GetNewProducts(It.IsAny<int>(), It.IsAny<CurrentCustomerContext>())).Returns(products);
+
+        _mapper!.Setup(mapper => mapper.Map<List<CategoryViewModel>>(categories)).Returns(fixture.CreateMany<CategoryViewModel>(cateAmount).ToList());
+        _mapper.Setup(mapper => mapper.Map<List<ProductBoxViewModel>>(products)).Returns(fixture.CreateMany<ProductBoxViewModel>(prodAmount).ToList());
+
+        var result = _sut!.Index() as ViewResult;
+        var resultModel = result!.Model as HomeIndexViewModel;
+
+
+        Assert.AreEqual(resultModel!.NewProducts!.Count, prodAmount);
+        Assert.AreEqual(resultModel!.TrendingCategories!.Count, cateAmount);
+    }
     //make sure only the categories and products for a certain user are shown
-    //make sure it gets the right amount - Hard Coded :(
+    [TestMethod, AutoDomainData]
+    public void When_Should_Only_Recieve_Deals_For_Logged_In_Customer(
+        int agreementAmount,
+        Fixture fixture
+        )
+    {
+        var CustContext = new CurrentCustomerContext
+        {
+            Email = email,
+            UserId = userId,
+            Agreements = fixture.CreateMany<Agreement>(agreementAmount).ToList()
+        };
+
+
+
+        var result = _sut!.Index() as ViewResult;
+        var resultModel = result!.Model as HomeIndexViewModel;
+    }
 }

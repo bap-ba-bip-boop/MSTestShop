@@ -25,9 +25,11 @@ public class BaseController : Controller
             Email = email, 
             UserId = Guid.Parse(userId),
             Agreements = _context
-                .UserAgreements!.Include(e => e.Agreement)
+                .UserAgreements!
+                .Include(e => e.Agreement)
                 .ThenInclude(e => e!.AgreementRows)
-                .Where(e => e.Email == email).Select(e=>e.Agreement).ToList()!
+                .Where(e => e.Email == email).Select(e=>e.Agreement)
+                .ToList()!
 
         };
     }

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using MSTestShop.Settings;
 using MvcSuperShop.Data;
 using MvcSuperShop.Infrastructure.Profiles;
 using MvcSuperShop.Services;
@@ -16,6 +17,9 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.Requ
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>();
 
+builder.Services.Configure<HomeControllerSettings>(
+    builder.Configuration.GetSection(nameof(HomeControllerSettings))
+    );
 
 builder.Services.AddControllersWithViews();
 

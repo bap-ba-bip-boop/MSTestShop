@@ -5,6 +5,8 @@ using AutoMapper;
 using MvcSuperShop.Data;
 using MvcSuperShop.Services;
 using MvcSuperShop.ViewModels;
+using Microsoft.Extensions.Options;
+using MSTestShop.Settings;
 
 namespace MvcSuperShop.Controllers
 {
@@ -13,21 +15,25 @@ namespace MvcSuperShop.Controllers
         private readonly ICategoryService _categoryService;
         private readonly IProductService _productService;
         private readonly IMapper _mapper;
+        private readonly IOptions<HomeControllerSettings> _settings;
 
-        public HomeController(ICategoryService categoryService, IProductService productService, IMapper mapper, ApplicationDbContext context)
+        public HomeController(ICategoryService categoryService, IProductService productService, IMapper mapper, ApplicationDbContext context, IOptions<HomeControllerSettings> settings)
         :base(context)
         {
             _categoryService = categoryService;
             _productService = productService;
             _mapper = mapper;
+            _settings = settings;
         }
 
         public IActionResult Index()
         {
+            var trendigCategoriesAmount = _settings.Value.TrendigCategoriesAmount;
+            var productAmount = _settings.Value.ProductAmount;
             var model = new HomeIndexViewModel
             {
-                TrendingCategories = _mapper.Map<List<CategoryViewModel>>(_categoryService.GetTrendingCategories(3)),
-                NewProducts = _mapper.Map<List<ProductBoxViewModel>>(_productService.GetNewProducts(10, GetCurrentCustomerContext()))
+                TrendingCategories = _mapper.Map<List<CategoryViewModel>>(_categoryService.GetTrendingCategories(trendigCategoriesAmount)),
+                NewProducts = _mapper.Map<List<ProductBoxViewModel>>(_productService.GetNewProducts(productAmount, GetCurrentCustomerContext()))
             };
             return View(model);
         }
