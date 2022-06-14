@@ -43,8 +43,9 @@ public class PricingServiceTests
         basePrice = listofProducts.Select(prod => prod.BasePrice).Sum();
     }
 
-    [TestMethod, AutoDomainData]
+    [TestMethod, AutoDomainData, InlineAutoData]
     public void When_Percentage_Discount_Is_Over_100_Should_Return_Base_Price(
+        int percentageDiscount,
         PricingService _sut
     )
     {
