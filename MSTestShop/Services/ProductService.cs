@@ -19,10 +19,18 @@ public  class ProductService : IProductService
     }
     public IEnumerable<ProductServiceModel> GetNewProducts(int cnt, CurrentCustomerContext context)
     {
-        return _pricingService.CalculatePrices(_mapper.Map<IEnumerable<ProductServiceModel>>(_context.Products!
-            .Include(e=>e.Category)
-            .Include(e=>e.Manufacturer)
-            .OrderByDescending(e => e.AddedUtc)
-            .Take(cnt)), context);
+        var products = _context.Products!
+                    .Include(e => e.Category)
+                    .Include(e => e.Manufacturer)
+                    .OrderByDescending(e => e.AddedUtc)
+                    .Take(cnt);
+        var mappedProducts = _mapper.Map<IEnumerable<ProductServiceModel>>(
+                products
+            );
+        var result = _pricingService.CalculatePrices(
+            mappedProducts,
+            context
+        );
+        return result;
     }
 }

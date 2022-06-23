@@ -3,9 +3,7 @@ using MvcSuperShop.Services;
 using UnitTests.TestInfrastructure.Attributes;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
-using AutoFixture;
 using System;
-using AutoFixture.MSTest;
 using System.Linq;
 
 namespace UnitTests.MvcSuperShop.Services;
@@ -13,7 +11,7 @@ namespace UnitTests.MvcSuperShop.Services;
 [TestClass]
 public class CategoryServiceTests
 {
-    [TestMethod, AutoDomainData]
+    [TestMethod, CustomerServiceMoqData]
     public void When_Call_GetTrendingCategories_Should_Return_Correct_Model(
         CategoryService _sut,
         int amountToTake
@@ -23,19 +21,14 @@ public class CategoryServiceTests
 
         Assert.IsInstanceOfType(result, typeof(IEnumerable<Category>));
     }
-    [TestMethod, AutoDomainData]
+    [TestMethod, CustomerServiceMoqData]
     public void When_Call_GetTrendingCategories_Should_Return_Correct_Amount_Of_Items(
-        Fixture fixture,
-        [Frozen] ApplicationDbContext dbContext,
+        ApplicationDbContext dbContext,
         CategoryService _sut,
-        Random _rng,
-        int amount
+        Random _rng
     )
     {
-        dbContext.Categories!.AddRange(fixture.CreateMany<Category>(amount));
-        dbContext.SaveChanges();
-
-        var amountToTake = _rng.Next(amount);
+        var amountToTake = _rng.Next(dbContext.Categories!.Count());
         var result = _sut.GetTrendingCategories(amountToTake);
 
         Assert.AreEqual(amountToTake, result.Count());

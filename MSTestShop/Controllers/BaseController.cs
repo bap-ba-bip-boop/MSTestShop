@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MvcSuperShop.Data;
@@ -30,7 +29,6 @@ public class BaseController : Controller
                 .ThenInclude(e => e!.AgreementRows)
                 .Where(e => e.Email == email).Select(e=>e.Agreement)
                 .ToList()!
-
         };
     }
 }
