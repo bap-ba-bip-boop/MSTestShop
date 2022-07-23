@@ -3,7 +3,7 @@ Case Assignment for a Testing course. We used MsTest in .Net6 for an already exi
 
 We used the 3rd party libraries "Autofixture" and "Moq"
 
-Keywords:
+**Keywords:**
 - UnitTesting
 - .Net 6
 - Autofixture
